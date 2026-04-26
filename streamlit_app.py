@@ -16,7 +16,7 @@ st.set_page_config(
 # load model
 @st.cache_resource
 def load_model():
-    with open('../models/lgbm_tuned.pkl', 'rb') as f:
+    with open('models/lgbm_tuned.pkl', 'rb') as f:
         return pickle.load(f)
 
 model = load_model()
@@ -32,30 +32,45 @@ FEATURES = [
 ]
 
 # sidebar navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Overview", "Churn predictor", "Model insights"])
+st.sidebar.title("navigation")
+st.sidebar.markdown("---")
+page = st.sidebar.radio("go to", ["overview", "churn predictor", "model insights"])
+st.sidebar.markdown("---")
+st.sidebar.markdown("""
+**about this project**
+
+built using real e-commerce transaction data from Olist — 100,000 orders across 9 tables.
+the model predicts whether a customer will ever make a second purchase.
+
+**tools used**
+- lightgbm + optuna
+- shap explainability
+- streamlit
+""")
 
 # ── page 1: overview ──────────────────────────────────────────
 if page == "overview":
     st.title("🛒 E-Commerce Customer Churn Prediction")
     st.markdown("""
     This project predicts whether an e-commerce customer will ever make a second purchase,
-    using real transaction data from Olist — a Brazilian marketplace with a customer behavior
-    pattern very similar to Shopee, Lazada, and Tiki in Southeast Asia.
+    using real transaction data from Olist — a Brazilian marketplace with customer behavior
+    patterns very similar to Shopee, Lazada, and Tiki in Southeast Asia.
     """)
 
     st.markdown("---")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric("total customers", "55,364")
     col2.metric("churn rate", "96%")
     col3.metric("model auc-roc", "0.9991")
+    col4.metric("features engineered", "15")
 
     st.markdown("---")
     st.subheader("key finding")
     st.info("""
     **Delivery delay — not price, not product quality — is the #1 driver of customer churn.**
     Customers who received orders late almost never returned. Customers who received orders
-    early were significantly more likely to buy again.
+    early were significantly more likely to buy again. This has a direct implication for
+    how e-commerce companies should prioritize their operations budget.
     """)
 
     st.markdown("---")
@@ -66,9 +81,9 @@ if page == "overview":
         st.markdown("""
         96% of customers never made a second purchase. Only 4% returned for another order.
         This extreme imbalance is the core business problem — almost every customer is a
-        one-time buyer, making retention campaigns critical for revenue growth.
+        one-time buyer, making retention campaigns critical for long-term revenue growth.
         """)
-        st.image('../data/churn_distribution.png', width=350)
+        st.image('data/churn_distribution.png', width=350)
 
     with col2:
         st.subheader("orders over time")
@@ -78,12 +93,15 @@ if page == "overview":
         order numbers, the churn rate remained consistently high throughout the period,
         confirming this is a structural retention problem, not a temporary one.
         """)
-        st.image('../data/orders_over_time.png', width=450)
+        st.image('data/orders_over_time.png', width=350)
 
 # ── page 2: churn predictor ───────────────────────────────────
 elif page == "churn predictor":
     st.title("🔍 Customer Churn Predictor")
-    st.markdown("Enter a customer's details to predict whether they will return for a second purchase.")
+    st.markdown("""
+    Enter a customer's details below to predict whether they are likely to return
+    for a second purchase. The model will also explain the top factors driving the prediction.
+    """)
     st.markdown("---")
 
     col1, col2, col3 = st.columns(3)
@@ -97,7 +115,7 @@ elif page == "churn predictor":
 
     with col2:
         st.subheader("delivery experience")
-        avg_delivery_delay = st.slider("average delivery delay (days)", -30, 60, 0)
+        avg_delivery_delay = st.slider("average delivery delay (days, negative = early)", -30, 60, 0)
         max_delivery_delay = st.slider("worst delivery delay (days)", -30, 60, 0)
         late_deliveries = st.number_input("number of late deliveries", 0, 20, 0, step=1)
         avg_freight_value = st.number_input("average freight cost (BRL)", 0.0, 200.0, 20.0, step=5.0)
@@ -134,27 +152,50 @@ elif page == "churn predictor":
         else:
             risk = "🟢 low risk"
 
+        # results
         col1, col2 = st.columns(2)
         with col1:
+            st.markdown("### prediction result")
             st.metric("churn probability", f"{churn_pct:.1f}%")
             st.markdown(f"**risk level**: {risk}")
+            st.progress(churn_prob)
 
         with col2:
-            st.subheader("business recommendation")
+            st.markdown("### business recommendation")
             if avg_product_weight > 5000 and churn_pct > 80:
-                st.warning("this customer bought a large, heavy item — likely a one-off purchase. a discount voucher is unlikely to drive a second purchase. consider recommending complementary accessories instead.")
+                st.warning("""
+                this customer bought a large, heavy item — likely a one-off purchase such as
+                furniture or an appliance. a discount voucher is unlikely to drive a second
+                purchase. consider recommending complementary accessories instead.
+                """)
             elif avg_delivery_delay > 10 and churn_pct > 80:
-                st.error("this customer experienced significant delivery delays. prioritize a service recovery message with a meaningful voucher before attempting upsell.")
+                st.error("""
+                this customer experienced significant delivery delays. prioritize a service
+                recovery message with a meaningful voucher before attempting any upsell.
+                rebuilding trust is the first step.
+                """)
             elif avg_review_score < 3 and churn_pct > 80:
-                st.error("this customer left poor reviews. address their service experience directly before any retention campaign.")
+                st.error("""
+                this customer left poor reviews. address their service experience directly
+                before launching any retention campaign. a generic discount will not be enough.
+                """)
             elif churn_pct < 40:
-                st.success("this customer shows strong retention signals. a loyalty reward or early access offer could convert them into a repeat buyer.")
+                st.success("""
+                this customer shows strong retention signals. a loyalty reward or early access
+                offer could convert them into a long-term repeat buyer. act quickly while
+                their experience is still fresh.
+                """)
             else:
-                st.info("this customer is at moderate churn risk. a targeted email campaign with a personalized product recommendation is a reasonable first step.")
+                st.info("""
+                this customer is at moderate churn risk. a targeted email campaign with a
+                personalized product recommendation based on their previous purchase category
+                is a reasonable first step.
+                """)
 
         # shap explanation
         st.markdown("---")
         st.subheader("why did the model make this prediction?")
+        st.markdown("the model breaks down each prediction into individual feature contributions.")
 
         shap_values = explainer.shap_values(input_data)
         if isinstance(shap_values, list):
@@ -172,11 +213,23 @@ elif page == "churn predictor":
         top3 = feature_impact.head(3)
         st.markdown("**top 3 factors driving this prediction:**")
         for _, row in top3.iterrows():
-            direction = "pushes toward churn" if row['shap_value'] > 0 else "pushes toward retention"
-            st.markdown(f"- **{row['feature']}** — {direction} (impact: {row['shap_value']:.3f})")
+            direction = "pushes toward churn 🔴" if row['shap_value'] > 0 else "pushes toward retention 🟢"
+            st.markdown(f"- **{row['feature']}** — {direction} (impact score: {row['shap_value']:.3f})")
+
+        # bar chart of all shap values
+        st.markdown("**full feature impact breakdown:**")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        colors = ['#DD4444' if v > 0 else '#4477DD' for v in feature_impact['shap_value']]
+        ax.barh(feature_impact['feature'], feature_impact['shap_value'], color=colors)
+        ax.axvline(x=0, color='black', linewidth=0.8)
+        ax.set_xlabel('shap value (positive = toward churn, negative = toward retention)')
+        ax.set_title('feature contributions for this customer')
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
 
         # force plot
-        st.markdown("**shap force plot — full breakdown of all features:**")
+        st.markdown("**shap force plot:**")
         fig, ax = plt.subplots(figsize=(14, 3))
         shap.force_plot(
             explainer.expected_value,
@@ -202,7 +255,7 @@ elif page == "model insights":
     final model to an AUC of 0.9991 — meaning the model correctly ranks 99.9% of
     customer pairs by churn likelihood.
     """)
-    st.image('../data/model_comparison.png', width=500)
+    st.image('data/model_comparison.png', width=500)
 
     st.markdown("---")
     st.subheader("roc curve")
@@ -212,7 +265,7 @@ elif page == "model insights":
     top-left corner. Our curve is extremely close to perfect, confirming the model is
     highly reliable for this dataset.
     """)
-    st.image('../data/roc_curve.png', width=500)
+    st.image('data/roc_curve.png', width=500)
 
     st.markdown("---")
     st.subheader("global feature importance (shap)")
@@ -221,7 +274,7 @@ elif page == "model insights":
     all customers. Delivery delay dominates — both the worst and average delay experienced
     by a customer matter far more than how much they spent or what they reviewed.
     """)
-    st.image('../data/shap_importance.png', width=550)
+    st.image('data/shap_importance.png', width=550)
 
     st.markdown("---")
     st.subheader("shap value distribution")
@@ -229,26 +282,26 @@ elif page == "model insights":
     This dot plot shows both the magnitude and direction of each feature's impact.
     Red dots represent high feature values, blue dots represent low values.
     Dots to the right push toward churn, dots to the left push toward retention.
-    For delivery delay, red dots (high delay) push strongly toward churn — confirming
-    late deliveries are the clearest signal that a customer will not return.
+    For delivery delay, red dots push strongly toward churn — confirming late deliveries
+    are the clearest signal that a customer will not return.
     """)
-    st.image('../data/shap_summary.png', width=550)
+    st.image('data/shap_summary.png', width=550)
 
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("retained customer")
+        st.subheader("retained customer explanation")
         st.markdown("""
         This customer received orders 15.5 days early on average.
         That single factor was the dominant reason the model predicted they would return.
         """)
-        st.image('../data/shap_retained.png', width=550)
+        st.image('data/shap_retained.png', width=350)
 
     with col2:
-        st.subheader("churned customer")
+        st.subheader("churned customer explanation")
         st.markdown("""
         This customer bought a very heavy item (9,750g) at a high price point —
         a classic one-off large purchase. The model correctly identified this as
         a one-time buying pattern with little chance of return.
         """)
-        st.image('../data/shap_churned.png', width=550)
+        st.image('data/shap_churned.png', width=350)

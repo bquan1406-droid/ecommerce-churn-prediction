@@ -8,7 +8,7 @@ Predicting whether an e-commerce customer will ever make a second purchase, usin
 
 ## The Problem
 
-97% of customers never came back after their first purchase. That's not a data quirk — it's a structural retention problem that costs e-commerce businesses significant revenue every month. This project builds a machine learning system to identify which customers are likely to churn, explain why it's happening, and give the business something actionable to work with.
+97% of customers never came back after their first purchase — it's a structural retention problem that costs e-commerce businesses significant revenue every month. This project builds a machine learning system to identify which customers are likely to churn, explain why it's happening, and give the business something actionable to work with.
 
 ---
 
@@ -59,6 +59,4 @@ streamlit run streamlit_app.py
 
 Download the dataset from [Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) and place the CSV files in the `data/` folder.
 
----
 
-Built as a portfolio project targeting Data Scientist roles in Singapore and Vietnam.

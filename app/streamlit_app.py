@@ -32,8 +32,8 @@ FEATURES = [
 ]
 
 # sidebar navigation
-st.sidebar.title("navigation")
-page = st.sidebar.radio("go to", ["overview", "churn predictor", "model insights"])
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Overview", "Churn predictor", "Model insights"])
 
 # ── page 1: overview ──────────────────────────────────────────
 if page == "overview":
@@ -78,7 +78,7 @@ if page == "overview":
         order numbers, the churn rate remained consistently high throughout the period,
         confirming this is a structural retention problem, not a temporary one.
         """)
-        st.image('../data/orders_over_time.png', width=350)
+        st.image('../data/orders_over_time.png', width=450)
 
 # ── page 2: churn predictor ───────────────────────────────────
 elif page == "churn predictor":
@@ -242,7 +242,7 @@ elif page == "model insights":
         This customer received orders 15.5 days early on average.
         That single factor was the dominant reason the model predicted they would return.
         """)
-        st.image('../data/shap_retained.png', width=350)
+        st.image('../data/shap_retained.png', width=550)
 
     with col2:
         st.subheader("churned customer")
@@ -251,4 +251,4 @@ elif page == "model insights":
         a classic one-off large purchase. The model correctly identified this as
         a one-time buying pattern with little chance of return.
         """)
-        st.image('../data/shap_churned.png', width=350)
+        st.image('../data/shap_churned.png', width=550)

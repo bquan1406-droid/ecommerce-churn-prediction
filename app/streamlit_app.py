@@ -78,7 +78,7 @@ if page == "overview":
         order numbers, the churn rate remained consistently high throughout the period,
         confirming this is a structural retention problem, not a temporary one.
         """)
-        st.image('../data/eda_overview.png', width=350)
+        st.image('../data/orders_over_time.png', width=350)
 
 # ── page 2: churn predictor ───────────────────────────────────
 elif page == "churn predictor":

@@ -22,7 +22,7 @@ A secondary finding was that customers who bought large, heavy items — furnitu
 
 ## How I Built It
 
-I started by merging six relational tables to build a single customer-level feature table — the same kind of data wrangling a Data Scientist at Shopee or Lazada would do daily. From there I engineered 21 features across four categories: purchase recency and spend, delivery experience, payment behavior, and review signals.
+I started by merging six relational tables to build a single customer-level feature table. From there I engineered 21 features across four categories: purchase recency and spend, delivery experience, payment behavior, and review signals.
 
 I trained three models in order of complexity — logistic regression as a baseline, then LightGBM, then LightGBM tuned with Optuna's Bayesian hyperparameter search across 50 trials. The final model reached an AUC-ROC of 0.9991. Class imbalance was handled with class weights rather than oversampling, to avoid introducing artificial patterns into the training data.
 
